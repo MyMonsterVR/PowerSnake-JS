@@ -1,0 +1,42 @@
+<html>
+
+<head>
+  <title>Snake</title>
+  <link href='reset.css' rel='stylesheet'>
+  <link href='master.css' rel='stylesheet'>
+</head>
+
+<body onload='checkSupported()'>
+  <script>
+    var snd = new Audio("music/beat1.mp3");
+  </script>
+
+  <span id='logo'>SNAKE</span>
+
+  <div id="setup">
+    <button name="play" onclick="init(); snd.play()">PLAY NOW</button>
+  </div>
+
+  <div id='play_menu'>
+    <button onclick="pause();document.getElementById('play_menu').style.display='none';document.getElementById('pause_menu').style.display='block';">Pause</button>
+  </div>
+
+  <div id='pause_menu'>
+    <button onclick="restart();document.getElementById('play_menu').style.display='block';document.getElementById('pause_menu').style.display='none';">Restart</button>
+    <button onclick="play();document.getElementById('play_menu').style.display='block';document.getElementById('pause_menu').style.display='none';">Resume</button>
+  </div>
+
+  <div id='restart_menu'>
+    <button onclick="restart();document.getElementById('play_menu').style.display='block';document.getElementById('restart_menu').style.display='none';">Restart</button>
+  </div>
+
+  <div id="score_container">
+    Score:
+    <span id="score">0</span>
+  </div>
+
+  <canvas id="canvas" width="1400" height="600"></canvas>
+  <p>Music and SFX from <a href="https://zapsplat.com" style="color: white">https://www.zapsplat.com</a></p </body>
+
+</html>
+<script src='newgame.js' type='text/javascript'></script>
