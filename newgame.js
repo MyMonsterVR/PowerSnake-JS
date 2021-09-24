@@ -12,6 +12,8 @@ var scoreMultiplier = 0;
 var speed = 50;
 var score = 0
 
+var wallSliding = false
+
 // fancy sound 😉
 
 var powerUpSound = new Audio("audio/pickup.mp3");
@@ -150,10 +152,23 @@ function downPosition() {
 // Even more movement controlling direction
 
 function whichWayToGo(axisType) {
-  if (axisType == 'x') {
-    a = (currentPosition['x'] > canvas.width / 2) ? moveLeft() : moveRight()
+  if (!wallSliding) {
+    if (axisType == 'x') {
+      a = (currentPosition['x'] > canvas.width) ? moveLeft() : moveRight()
+    } else {
+      a = (currentPosition['y'] > canvas.height) ? moveUp() : moveDown()
+    }
+    if (axisType == 'x') {
+      a = (currentPosition['x'] < canvas.width) ? moveLeft() : moveRight()
+    } else {
+      a = (currentPosition['y'] < canvas.height) ? moveUp() : moveDown()
+    }
   } else {
-    a = (currentPosition['y'] > canvas.height / 2) ? moveUp() : moveDown()
+    if (axisType == 'x') {
+      a = (currentPosition['x'] > canvas.width / 2) ? moveLeft() : moveRight()
+    } else {
+      a = (currentPosition['y'] > canvas.height / 2) ? moveUp() : moveDown()
+    }
   }
 }
 
@@ -220,26 +235,41 @@ async function makePowerItem() {
   } else {
     ctx.fillStyle = "rgb(0,50,200)"
     if (begun) {
-      var randomPicker = Math.floor(Math.random() * 3 + 1)
+      var randomPicker = Math.floor(Math.random() * 4 + 1)
       if (randomPicker != 0) {
         switch (randomPicker) {
           case 1:
+            document.getElementById("currentpowerup").innerText = "Current PowerUp: Random Color"
+
             var randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
             ctx.fillStyle = randomColor
             break;
           case 2:
-            setTimeout(
-              scoreMultiplier = 0, 15000)
+            setTimeout(function() {
+              scoreMultiplier = 0
+              document.getElementById("currentpowerup").innerText = "Current PowerUp: NONE"
+            }, 15000)
             scoreMultiplier += 10
             updateMultiScore()
+            document.getElementById("currentpowerup").innerText = "Current PowerUp: +10"
             break
           case 3:
+            document.getElementById("currentpowerup").innerText = "Current PowerUp: SPEED"
             speed = 10
             await wait(2500)
             speed = 50
+            document.getElementById("currentpowerup").innerText = "Current PowerUp: NONE"
+            break
+          case 4:
+            document.getElementById("currentpowerup").innerText = "Current PowerUp: WALL SLIDING"
+            setTimeout(function() {
+              wallSliding = false;
+              document.getElementById("currentpowerup").innerText = "Current PowerUp: NONE"
+            }, 15000)
+            wallSliding = true
             break
         }
-      }
+      } else console.log("Error")
     }
     return ctx.fillRect(suggestedPointPower[0], suggestedPointPower[1], gridSize, gridSize)
   }
