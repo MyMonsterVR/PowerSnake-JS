@@ -5,6 +5,7 @@ var begun = false;
 
 var directions = ""
 
+var snakeColor = "rgb(0, 150, 0)"
 
 // score
 
@@ -14,9 +15,11 @@ var score = 0
 
 var wallSliding = false
 
+var dead = false
+
 // fancy sound 😉
 
-var powerUpSound = new Audio("audio/pickup.mp3");
+var powerUpSound = new Audio("../audio/pickup.mp3");
 
 // Check if browser supports the canvas
 
@@ -32,7 +35,7 @@ function checkSupported() {
 
 function init() {
   clearVar()
-  powerUpSound = new Audio("audio/pickup.mp3")
+  powerUpSound = new Audio("../audio/pickup.mp3")
   start()
 }
 
@@ -62,9 +65,9 @@ var oldSpeed = 50;
 // restart the game
 
 function restart() {
-  speed = 50
   pause()
   start()
+  speed = 50
 }
 
 // pause the game
@@ -93,24 +96,16 @@ function wait(time) {
   });
 }
 
-// Repeat ze snake
-
-async function moveSnakeRepeat() {
-  if (speed > 50) speed = 50
-  await wait(speed);
-  moveSnake()
-  requestAnimationFrame(moveSnakeRepeat)
-}
-
 // Draw ze snake
 
 function drawSnake() {
   if (snakeBody.some(hasEatenItself)) {
+    dead = true
     gameOver()
     return false
   }
   snakeBody.push([currentPosition['x'], currentPosition['y']])
-  ctx.fillStyle = "rgb(0,150,0)"
+  ctx.fillStyle = snakeColor
   ctx.fillRect(currentPosition['x'], currentPosition['y'], gridSize, gridSize)
   if (snakeBody.length > snakeLength) {
     var itemToRemove = snakeBody.shift()
@@ -122,7 +117,6 @@ function drawSnake() {
     snakeLength += 1
     updateScore()
   }
-
   if (currentPosition['x'] == suggestedPointPower[0] && currentPosition['y'] == suggestedPointPower[1]) {
     powerUpSound.play()
     makePowerItem()
@@ -130,94 +124,12 @@ function drawSnake() {
 
 }
 
-
-// A lot of movement stuff to make sure it moves on the grid
-
-function leftPosition() {
-  return currentPosition['x'] - gridSize
-}
-
-function rightPosition() {
-  return currentPosition['x'] + gridSize
-}
-
-function upPosition() {
-  return currentPosition['y'] - gridSize
-}
-
-function downPosition() {
-  return currentPosition['y'] + gridSize
-}
-
-// Even more movement controlling direction
-
-function whichWayToGo(axisType) {
-  if (!wallSliding) {
-    if (axisType == 'x') {
-      a = (currentPosition['x'] > canvas.width) ? moveLeft() : moveRight()
-    } else {
-      a = (currentPosition['y'] > canvas.height) ? moveUp() : moveDown()
-    }
-    if (axisType == 'x') {
-      a = (currentPosition['x'] < canvas.width) ? moveLeft() : moveRight()
-    } else {
-      a = (currentPosition['y'] < canvas.height) ? moveUp() : moveDown()
-    }
-  } else {
-    if (axisType == 'x') {
-      a = (currentPosition['x'] > canvas.width / 2) ? moveLeft() : moveRight()
-    } else {
-      a = (currentPosition['y'] > canvas.height / 2) ? moveUp() : moveDown()
-    }
-  }
-}
-
-// Actual call functions to decide which function to use
-
-function moveUp() {
-  if (upPosition() >= 0) {
-    executeMove('up', 'y', upPosition())
-  } else {
-    whichWayToGo('x')
-  }
-}
-
-function moveDown() {
-  if (downPosition() < canvas.height) {
-    executeMove('down', 'y', downPosition())
-  } else {
-    whichWayToGo('x')
-  }
-}
-
-function moveLeft() {
-  if (leftPosition() >= 0) {
-    executeMove('left', 'x', leftPosition())
-  } else {
-    whichWayToGo('y')
-  }
-}
-
-function moveRight() {
-  if (rightPosition() < canvas.width) {
-    executeMove('right', 'x', rightPosition())
-  } else {
-    whichWayToGo('y')
-  }
-}
-
-// MOVE
-
-function executeMove(dirValue, axisType, axisValue) {
-  direction = dirValue
-  currentPosition[axisType] = axisValue
-  drawSnake()
-}
-
 // Create Items
 
 function makeFoodItem() {
-  suggestedPoint = [Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize, Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize]
+  suggestedPoint = [Math.floor(Math.random() * (canvas.width / gridSize)) *
+    gridSize, Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
+  ]
   if (snakeBody.some(hasPoint)) {
     return makeFoodItem()
   } else {
@@ -226,10 +138,12 @@ function makeFoodItem() {
   }
 }
 
-// Async so we can use await to use our timer
+// Async so we can do the await command, to use our timer
 
 async function makePowerItem() {
-  suggestedPointPower = [Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize, Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize]
+  suggestedPointPower = [Math.floor(Math.random() * (canvas.width / gridSize)) *
+    gridSize, Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
+  ]
   if (snakeBody.some(hasPoint)) {
     makePowerItem()
   } else {
@@ -239,19 +153,22 @@ async function makePowerItem() {
       if (randomPicker != 0) {
         switch (randomPicker) {
           case 1:
-            document.getElementById("currentpowerup").innerText = "Current PowerUp: Random Color"
-
-            var randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-            ctx.fillStyle = randomColor
+            document.getElementById("currentpowerup").innerText =
+              "Current PowerUp: Random Color"
+            var randomColor =
+              '#' + Math.floor(Math.random() * 16777215).toString(16);
+            snakeColor = randomColor
+            await wait(5000)
+            snakeColor = "rgb(0, 150, 0)"
             break;
           case 2:
             setTimeout(function() {
               scoreMultiplier = 0
               document.getElementById("currentpowerup").innerText = "Current PowerUp: NONE"
             }, 15000)
-            scoreMultiplier += 10
+            scoreMultiplier = 10
             updateMultiScore()
-            document.getElementById("currentpowerup").innerText = "Current PowerUp: +10"
+            document.getElementById("currentpowerup").innerText = "Current PowerUp: +" + scoreMultiplier
             break
           case 3:
             document.getElementById("currentpowerup").innerText = "Current PowerUp: SPEED"
@@ -269,7 +186,7 @@ async function makePowerItem() {
             wallSliding = true
             break
         }
-      } else console.log("Error")
+      } else console.log("Power Error")
     }
     return ctx.fillRect(suggestedPointPower[0], suggestedPointPower[1], gridSize, gridSize)
   }
@@ -295,14 +212,19 @@ function clearVar() {
 }
 
 function gameOver() {
-  alert("YOU DIED, YOU FOOL.")
-  speed = 0
-  pause()
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  document.getElementById('play_menu')
-    .style.display = 'none'
-  document.getElementById('restart_menu')
-    .style.display = 'block'
+  if (dead) {
+    dead = false
+    alert("YOU DIED, YOU FOOL.")
+    pause()
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    speed = 500000
+    document.getElementById('play_menu')
+      .style.display = 'none'
+    document.getElementById('setup')
+      .style.display = 'none'
+    document.getElementById('restart_menu')
+      .style.display = 'block'
+  }
 }
 var newscore = 0
 
@@ -316,7 +238,7 @@ function updateScore() {
 }
 
 
-// MORE MOVEMENT!!!!!!!!!!!
+// MOVEMENT
 
 document.onkeydown = function(event) {
   if (!allowPressKeys) {
@@ -358,7 +280,99 @@ document.onkeydown = function(event) {
       break
   }
 }
-// EVEN MOOOOOOOOOOOOOORE!!!!
+
+// A lot of movement stuff to make sure it moves on the grid
+
+function leftPosition() {
+  return currentPosition['x'] - gridSize
+}
+
+function rightPosition() {
+  return currentPosition['x'] + gridSize
+}
+
+function upPosition() {
+  return currentPosition['y'] - gridSize
+}
+
+function downPosition() {
+  return currentPosition['y'] + gridSize
+}
+
+// Even more movement controlling direction
+
+function whichWayToGo(axisType) {
+  if (!wallSliding) {
+    if (axisType == 'x') {
+      axs = (currentPosition['x'] > canvas.width) ? moveLeft() : moveRight()
+    } else {
+      axs = (currentPosition['y'] > canvas.height) ? moveUp() : moveDown()
+    }
+    if (axisType == 'x') {
+      axs = (currentPosition['x'] < canvas.width) ? moveLeft() : moveRight()
+    } else {
+      axs = (currentPosition['y'] < canvas.height) ? moveUp() : moveDown()
+    }
+  } else {
+    if (axisType == 'x') {
+      axs = (currentPosition['x'] > canvas.width / 2) ? moveLeft() : moveRight()
+    } else {
+      axs = (currentPosition['y'] > canvas.height / 2) ? moveUp() : moveDown()
+    }
+  }
+}
+
+// Actual call functions to decide which function to use
+
+function moveUp() {
+  if (upPosition() >= 0) {
+    executeMove('up', 'y', upPosition())
+  } else {
+    whichWayToGo('x')
+  }
+}
+
+function moveDown() {
+  if (downPosition() < canvas.height) {
+    executeMove('down', 'y', downPosition())
+  } else {
+    whichWayToGo('x')
+  }
+}
+
+function moveLeft() {
+  if (leftPosition() >= 0) {
+    executeMove('left', 'x', leftPosition())
+  } else {
+    whichWayToGo('y')
+  }
+}
+
+function moveRight() {
+  if (rightPosition() < canvas.width) {
+    executeMove('right', 'x', rightPosition())
+  } else {
+    whichWayToGo('y')
+  }
+}
+
+function executeMove(dirValue, axisType, axisValue) {
+  direction = dirValue
+  currentPosition[axisType] = axisValue
+  drawSnake()
+}
+
+
+// Repeat ze snake
+
+async function moveSnakeRepeat() {
+  if (speed > 50) speed = 50
+  await wait(speed);
+  moveSnake()
+  requestAnimationFrame(moveSnakeRepeat)
+}
+
+// Actual movement controller
 function moveSnake() {
   switch (direction) {
     case 'up':
